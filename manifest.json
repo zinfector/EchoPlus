@@ -22,8 +22,6 @@
     "value": "same-origin"
   },
   "permissions": [
-    "activeTab",
-    "scripting",
     "cookies",
     "downloads",
     "storage",
@@ -41,7 +39,9 @@
     "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; child-src 'self' blob:; worker-src 'self' blob:;"
   },
   "sandbox": {
-    "pages": ["sandbox.html"]
+    "pages": [
+      "sandbox.html"
+    ]
   },
   "web_accessible_resources": [
     {
@@ -60,7 +60,9 @@
         "sandbox.html",
         "sandbox.js"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "background": {
@@ -73,8 +75,12 @@
         "https://*.echo360.org/section/*/home*",
         "https://*.echo360.net/section/*/home*"
       ],
-      "js": ["content/class-list-injector.js"],
-      "css": ["content/injector.css"],
+      "js": [
+        "content/class-list-injector.js"
+      ],
+      "css": [
+        "content/injector.css"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
