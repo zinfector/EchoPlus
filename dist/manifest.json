@@ -2,7 +2,19 @@
   "manifest_version": 3,
   "name": "echoPlus",
   "version": "2.0.0",
-  "description": "For a more sleek echo experience. Me and the boys hate echo.",
+  "description": "An enhanced, modernized, and highly customizable UI overlay for the Echo360 video player with downloading capabilities.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "cross_origin_embedder_policy": {
     "value": "require-corp"
   },

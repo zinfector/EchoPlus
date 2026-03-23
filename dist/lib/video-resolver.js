@@ -235,18 +235,23 @@ async function fromClassroomHtml(lessonData, hostname) {
   // Fallback to building the URL manually. We check if they exist by doing a quick fetch.
   const url1 = makeEchoUrl(videoPageData, '1', 's1_v.m3u8');
   const url2 = makeEchoUrl(videoPageData, '1', 's2_av.m3u8');
+  const urlA = makeEchoUrl(videoPageData, '1', 's0_a.m3u8');
 
   console.log('[Echo360] Testing fallback URLs...');
-  
-  // Use Promise.all to test both URLs instantly in parallel
-  const [res1, res2] = await Promise.all([
+
+  // Use Promise.all to test URLs instantly in parallel
+  const [res1, res2, resA] = await Promise.all([
     fetch(url1, { method: 'HEAD', credentials: 'include' }).catch(() => ({ ok: false })),
-    fetch(url2, { method: 'HEAD', credentials: 'include' }).catch(() => ({ ok: false }))
+    fetch(url2, { method: 'HEAD', credentials: 'include' }).catch(() => ({ ok: false })),
+    fetch(urlA, { method: 'HEAD', credentials: 'include' }).catch(() => ({ ok: false }))
   ]);
 
   urls = [];
   if (res1.ok) urls.push(url1);
   if (res2.ok) urls.push(url2);
+
+  let audioUrl = null;
+  if (resA.ok) audioUrl = urlA;
 
   // Ultimate fallback if HEAD requests get blocked by weird CORS rules but the URLs are actually valid
   if (urls.length === 0) {
@@ -254,10 +259,12 @@ async function fromClassroomHtml(lessonData, hostname) {
       urls = [url2];
       const hasView2 = videoPageData.video?.hasView2 || videoPageData.video?.media?.hasView2 || false;      
       if (hasView2) urls.unshift(url1);
+      // Blindly assume audio might exist if we're falling back
+      audioUrl = urlA;
   }
 
-  console.log('[Echo360] Resolved via classroom HTML extraction:', urls);
-  return { type: 'm3u8', urls };}
+  console.log('[Echo360] Resolved via classroom HTML extraction:', urls, 'Audio:', audioUrl);
+  return { type: 'm3u8', urls, audioUrl };}
 
 // ─── Tab-based Classroom Capture ─────────────────────────────────────────────
 
