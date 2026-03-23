@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Echo360 Stream</title>
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: sans-serif; position: relative; }
+    #video-container { display: flex; width: 100%; height: 100%; justify-content: center; align-items: center; flex-direction: row; }
+    .stream-view { flex: 1; max-width: 100%; max-height: 100%; outline: none; object-fit: contain; }
+    #loading { color: white; position: absolute; z-index: 10; font-size: 24px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+    /* Custom PIP Controls Overlay */
+    #controls-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px 20px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        display: flex;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 20;
+    }
+    body:hover #controls-overlay { opacity: 1; }
+
+    .ctrl-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        transition: color 0.2s;
+    }
+    .ctrl-btn:hover { color: #D5006C; }
+    .ctrl-btn svg { fill: currentColor; width: 24px; height: 24px; }
+
+    #progress-container {        flex: 1;
+        margin: 0 15px;
+        height: 6px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+        cursor: pointer;
+        position: relative;
+    }
+    #progress-fill {
+        height: 100%;
+        background: #D5006C;
+        border-radius: 3px;
+        width: 0%;
+        pointer-events: none;
+    }
+    #time-display {
+        color: white;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+    }
+  </style>
+  <script src="/lib/hls.min.js"></script>
+</head>
+<body>
+  <div id="loading">Loading stream...</div>
+  <div id="video-container"></div>
+
+  <div id="controls-overlay">
+      <button id="play-pause" class="ctrl-btn" title="Play/Pause">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button id="skip-back" class="ctrl-btn" title="Back 10s">
+          <svg viewBox="0 0 24 24"><path d="M12.5 3C17.15 3 21 6.85 21 11.5S17.15 20 12.5 20c-3.74 0-7.01-2.42-8.1-5.83l1.89-.62c.86 2.65 3.39 4.55 6.21 4.55 3.6 0 6.5-2.9 6.5-6.5S16.1 5.1 12.5 5.1V8l-4-4 4-4v3zm-2.8 9.9c0-1.8.8-2.6 2.1-2.6 1.3 0 2.1.8 2.1 2.6v2.1c0 1.8-.8 2.6-2.1 2.6-1.3 0-2.1-.8-2.1-2.6v-2.1zm1.3.1v1.9c0 .7.2 1.3.8 1.3s.8-.6.8-1.3v-1.9c0-.7-.2-1.3-.8-1.3s-.8.6-.8 1.3zm-3.6 2.8H8.8V11.5H7.1v1h1.7v3.3z"/></svg>
+      </button>
+      <button id="skip-forward" class="ctrl-btn" title="Forward 10s">
+          <svg viewBox="0 0 24 24"><path d="M11.5 3C6.85 3 3 6.85 3 11.5S6.85 20 11.5 20c3.74 0 7.01-2.42 8.1-5.83l-1.89-.62c-.86 2.65-3.39 4.55-6.21 4.55-3.6 0-6.5-2.9-6.5-6.5S8.9 5.1 11.5 5.1V8l4-4-4-4v3zm2.8 9.9c0-1.8-.8-2.6-2.1-2.6-1.3 0-2.1.8-2.1 2.6v2.1c0 1.8.8 2.6 2.1 2.6 1.3 0 2.1-.8 2.1-2.6v-2.1zm-1.3.1v1.9c0 .7-.2 1.3-.8 1.3s-.8-.6-.8-1.3v-1.9c0-.7.2-1.3.8-1.3s.8.6.8 1.3zm3.6 2.8h-1.4V11.5h-1.7v1h1.7v3.3z"/></svg>
+      </button>
+      <button id="vol-btn" class="ctrl-btn" title="Mute/Unmute">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
+      <div id="progress-container">
+          <div id="progress-fill"></div>
+      </div>
+      <div id="time-display" style="margin-right:15px;">00:00 / 00:00</div>
+      
+      <button id="speed-btn" class="ctrl-btn" style="font-weight:bold; font-size:14px; width:auto; padding:0 10px;">1x</button>
+      <button id="swap-btn" class="ctrl-btn" title="Swap Feeds">
+          <svg viewBox="0 0 24 24"><path d="M8 10V7L4 11l4 4v-3h8v3l4-4-4-4v3H8z"/></svg>
+      </button>
+      <button id="fullscreen-btn" class="ctrl-btn">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+      </button>
+  </div>
+
+  <script src="stream.js"></script>
+</body>
+</html>

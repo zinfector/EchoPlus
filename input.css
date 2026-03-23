@@ -1,0 +1,23 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import "tailwindcss";
+
+@theme {
+  --color-brand-light: #D5006C;
+  --color-brand-dark: #F472B6;
+  --color-brand-hover: #AF0059;
+
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1f2937;
+
+  --color-background-light: #ffffff;
+  --color-background-dark: #111827;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer utilities {
+  .theme-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+}

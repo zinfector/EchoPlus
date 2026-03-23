@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIO 361 - Biochemistry I | Class List</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <link rel="stylesheet" href="tailwind.css">
+
+    <!-- Lucide Icons for UI elements -->
+    <script src="lucide.js"></script>
+
+    <style>
+        /* Theme Transitions */
+        body { transition: background-color 0.4s ease, color 0.4s ease; }
+        .theme-transition { transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, opacity 0.3s ease; }
+
+        /* Dropdown Animation CSS Grid */
+        .dropdown-grid {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-grid.open { grid-template-rows: 1fr; }
+        .dropdown-inner { overflow: hidden; }
+
+        /* True Slide Animation Viewport */
+        .slider-viewport {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+            overflow: hidden;
+            position: relative;
+        }
+        .slider-pane {
+            grid-column: 1 / -1;
+            grid-row: 1 / -1;
+            width: 100%;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+        .slider-pane.active { transform: translateX(0); z-index: 2; }
+        .slider-pane.slide-out-left { transform: translateX(-100%); z-index: 1; }
+        .slider-pane.slide-out-right { transform: translateX(100%); z-index: 1; }
+        .slider-pane.next-right { transform: translateX(100%); z-index: 2; }
+        .slider-pane.next-left { transform: translateX(-100%); z-index: 2; }
+
+        /* Selection Mode Animations */
+        .selection-controls-grid {
+            display: grid;
+            grid-template-columns: 0fr;
+            opacity: 0;
+            transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .selection-controls-grid.show {
+            grid-template-columns: 1fr;
+            opacity: 1;
+        }
+        .selection-controls-inner {
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .selection-mode .class-checkbox-container {
+            width: 2rem !important; /* 8 * 0.25rem = 32px */
+            opacity: 1 !important;
+            padding-right: 0.5rem !important;
+        }
+        
+        .class-checkbox-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            width: 0 !important;
+            opacity: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        /* Grid checkbox specifics */
+        .grid-checkbox-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0);
+            opacity: 0;
+            transform-origin: top left;
+        }
+        .selection-mode .grid-checkbox-container {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Remove transition from flex-1 children during drag to prevent lag */
+        .echo-player .feed-1, .echo-player .feed-2 {
+            transition: none !important;
+        }
+
+        /* Player PIP Resizer overrides */
+        .echo-player .resize { resize: both; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 min-h-screen antialiased">
+
+    <!-- Top Navigation Bar -->
+    <header class="relative z-[100] border-b border-gray-200 dark:border-gray-800 theme-transition bg-white dark:bg-gray-900 shadow-sm">
+        <div class="px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <!-- Logo -->
+                <div class="flex items-center font-bold text-xl tracking-tight text-gray-800 dark:text-white theme-transition cursor-pointer">
+                    echo<span class="text-brand-light dark:text-brand-dark">Plus</span>
+                </div>
+                
+                <nav class="hidden md:flex space-x-6 text-sm font-medium text-gray-500 dark:text-gray-400 theme-transition h-14 relative">
+                    <div class="relative h-full flex items-center">
+                        <button id="coursesDropdownBtn" class="text-brand-light dark:text-brand-dark flex items-center focus:outline-none h-full px-2 cursor-pointer pointer-events-auto hover:text-brand-hover dark:hover:text-brand-light transition-colors">
+                            Courses <i data-lucide="chevron-down" class="w-4 h-4 ml-1 transition-transform" id="coursesDropdownIcon"></i>
+                        </button>
+
+                        <!-- Courses Dropdown -->
+                        <div id="coursesDropdownMenu" class="absolute left-0 top-[calc(100%+0.5rem)] hidden w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl z-[150] pointer-events-auto flex flex-col">
+                            <ul id="term-list" class="py-2 text-gray-700 dark:text-gray-300 w-full max-h-[75vh] overflow-y-auto flex flex-col">
+                                <li class="px-4 py-2 text-xs text-gray-500 w-full">Loading courses...</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="relative h-full flex items-center">
+                        <button id="qaSidebarBtn" class="flex items-center focus:outline-none h-full px-2 cursor-pointer pointer-events-auto hover:text-gray-900 dark:hover:text-white transition-colors">
+                            Q&A <i data-lucide="message-circle-question" class="w-4 h-4 ml-1.5"></i>
+                        </button>
+                    </div>
+                </nav>            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-light dark:focus:ring-brand-dark" aria-label="Toggle Dark Mode">
+                    <i data-lucide="moon" id="moonIcon" class="w-4 h-4 hidden dark:block"></i>
+                    <i data-lucide="sun" id="sunIcon" class="w-4 h-4 block dark:hidden"></i>
+                </button>
+                <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"><i data-lucide="user-circle" class="w-5 h-5"></i></button>
+                <div class="w-6 h-6 bg-red-800 rounded flex items-center justify-center text-white text-[10px] font-bold shadow-sm">SB</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub-header & Title -->
+    <div class="border-b border-gray-200 dark:border-gray-800 theme-transition bg-[#fbfbfb] dark:bg-gray-900 pt-6 px-4 md:px-8 flex flex-col md:flex-row md:items-end justify-between">
+        <h1 class="text-2xl text-gray-600 dark:text-gray-200 mb-4 md:mb-6 font-light tracking-wide theme-transition">
+            BIO 361 - 01 Biochemistry I
+        </h1>
+        
+        <div class="flex space-x-6 text-xs font-semibold tracking-wider uppercase overflow-x-auto hide-scrollbar">
+            <a href="#" id="tab-classes" class="pb-3 text-brand-light dark:text-brand-dark border-b-2 border-brand-light dark:border-brand-dark whitespace-nowrap">Classes</a>
+            <a href="#" id="openQASidebarTab" class="pb-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 border-b-2 border-transparent transition-colors whitespace-nowrap">Q&A</a>  
+            <a href="#" id="tab-search" class="pb-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 border-b-2 border-transparent transition-colors whitespace-nowrap">Search Transcripts</a>
+        </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="w-full px-4 md:px-8 py-6 max-w-screen-2xl mx-auto">
+
+        <!-- Controls -->
+        <div id="classesControls" class="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 mb-6">
+            <div class="flex flex-wrap items-center w-full sm:w-auto">
+                <button id="toggleSelectionModeBtn"  class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded text-sm font-semibold transition-colors shadow-sm flex items-center shrink-0">
+                    <i data-lucide="check-square" class="w-4 h-4 mr-1.5"></i> <span>Select to Download</span>
+                </button>
+
+                <div id="selectionControls" class="selection-controls-grid">
+                    <div class="selection-controls-inner pl-4 gap-4 py-1">
+                        <div class="flex items-center bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded px-3 py-1.5 shadow-sm whitespace-nowrap shrink-0">
+                            <input type="checkbox" id="selectAllCheckbox"  class="w-4 h-4 text-brand-light border-gray-300 rounded focus:ring-brand-light cursor-pointer">
+                            <label for="selectAllCheckbox" class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium cursor-pointer select-none">Select All</label>
+                        </div>
+
+                        <div id="downloadBtnContainer" class="selection-controls-grid">
+                            <div class="selection-controls-inner whitespace-nowrap">
+                                <button id="downloadSelectedBtn"  class="bg-brand-light hover:bg-brand-hover text-white px-3 py-1.5 rounded text-sm font-semibold transition-colors shadow-sm flex items-center shrink-0">
+                                    <i data-lucide="download" class="w-4 h-4 mr-1.5"></i> Download (<span id="selectedCount">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative flex-1 sm:flex-none ml-auto sm:ml-4 mt-4 sm:mt-0 w-full sm:w-auto">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search classes..."  class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded pl-9 pr-3 py-1.5 text-sm w-full sm:w-64 focus:outline-none focus:ring-1 focus:ring-brand-light theme-transition">
+                </div>
+            </div>
+
+            <!-- View Layout Toggle & Sort -->
+            <div class="flex items-center space-x-4 shrink-0 self-end sm:self-auto">
+                <div class="flex items-center space-x-3 hidden md:flex">
+                    <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">Sort By</span>
+                    <select id="sortSelect" class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 text-sm w-44 focus:outline-none focus:ring-1 focus:ring-brand-light theme-transition">
+                        <option value="custom">Echo360 Default</option>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="most_qs">Most Questions</option>
+                        <option value="least_qs">Least Questions</option>
+                        <option value="longest">Longest Video</option>
+                        <option value="shortest">Shortest Video</option>
+                    </select>
+                </div>
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-lg theme-transition">
+                    <button id="btn-layout-list"  class="flex items-center justify-center w-8 h-8 rounded-md bg-white dark:bg-gray-600 shadow-sm text-brand-light dark:text-brand-dark transition-all focus:outline-none" aria-label="List View">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-layout-grid"  class="flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all focus:outline-none" aria-label="Grid View">
+                        <i data-lucide="grid" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="searchControls" class="hidden flex-col mb-6">
+            <div class="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm p-1 max-w-2xl w-full">
+                <i data-lucide="search" class="w-5 h-5 ml-3 text-gray-400"></i>
+                <input type="text" id="transcriptSearchInput" placeholder="Search for spoken words across all lectures..." class="flex-1 bg-transparent border-none focus:outline-none text-gray-900 dark:text-gray-100 px-3 py-2 text-base">
+                <button id="executeSearchBtn" class="bg-brand-light hover:bg-brand-hover text-white px-4 py-2 rounded-md font-semibold transition-colors flex items-center">Search</button>
+            </div>
+            <div id="searchStats" class="text-sm text-gray-500 dark:text-gray-400 mt-3 font-medium h-5"></div>
+        </div>
+
+        <!-- Class Container (List or Grid) -->
+        <div id="classList" class="theme-transition">
+            <!-- Classes injected by JS -->
+        </div>
+
+        <!-- Search Results Container -->
+        <div id="searchList" class="hidden flex-col space-y-8 theme-transition">
+            <!-- Search players injected by JS -->
+        </div>
+        </main>
+    <!-- Q&A Sidebar Overlay -->
+    <div id="qaSidebarOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <div id="qaSidebar" class="fixed top-0 right-0 bottom-0 w-full md:w-[450px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 z-[210] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center"><i data-lucide="message-circle-question" class="w-5 h-5 mr-2 text-brand-light dark:text-brand-dark"></i> Q&A</h2>
+            <button id="closeQASidebarBtn" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none bg-gray-200 dark:bg-gray-800 p-1.5 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div class="relative w-full">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="qaSearchInput" placeholder="Search questions..." class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full pl-9 pr-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-brand-light/50 transition-all">
+            </div>
+        </div>
+        <div id="qaListContainer" class="flex-1 overflow-y-auto p-4 space-y-4 relative">
+            <div class="flex items-center justify-center h-full text-gray-500 flex-col space-y-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-light"></div>
+                <p class="text-sm">Loading Questions...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Manager Panel -->
+    <div id="download-manager" class="fixed bottom-5 right-5 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-50 transform transition-all duration-300 translate-y-[150%] opacity-0 flex flex-col overflow-hidden">
+        <div class="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center"><i data-lucide="download-cloud" class="w-4 h-4 mr-2"></i> Downloads</h3>
+            <button id="closeDownloadManagerBtn" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div id="download-list" class="max-h-60 overflow-y-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-900/50">
+            <!-- Download items go here -->
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script src="/lib/hls.min.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

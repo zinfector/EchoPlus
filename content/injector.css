@@ -1,0 +1,171 @@
+/* Echo360 Downloader Extension — Injected Styles */
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+.echo-ext-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #1a1a2e;
+  border: 1px solid #e84855;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+.echo-ext-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.echo-ext-toolbar-status {
+  font-size: 12px;
+  color: #aaa;
+  min-height: 14px;
+}
+
+.echo-ext-select-all {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.echo-ext-download-selected,
+.echo-ext-clear {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.echo-ext-download-selected {
+  background: #e84855;
+  color: #fff;
+}
+
+.echo-ext-download-selected:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.echo-ext-download-selected:not(:disabled):hover {
+  background: #c73a46;
+}
+
+.echo-ext-clear {
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #555;
+}
+
+.echo-ext-clear:hover {
+  color: #fff;
+  border-color: #fff;
+}
+
+/* ── Per-row Download & Stream Buttons ──────────────────────────────── */
+.echo-ext-dl-btn,
+.echo-ext-stream-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #e84855;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  vertical-align: middle;
+}
+
+.echo-ext-stream-btn {
+  background: #4caf50;
+}
+
+.echo-ext-dl-btn:hover:not(:disabled) {
+  background: #c73a46;
+  transform: scale(1.1);
+}
+
+.echo-ext-stream-btn:hover:not(:disabled) {
+  background: #388e3c;
+  transform: scale(1.1);
+}
+
+.echo-ext-dl-btn:disabled,
+.echo-ext-stream-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Per-row Checkbox ─────────────────────────────────────── */
+.echo-ext-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0 8px 0 4px;
+  accent-color: #e84855;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Progress Indicator ───────────────────────────────────── */
+.echo-ext-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.echo-ext-bar {
+  flex: 1;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+  overflow: hidden;
+  max-width: 120px;
+}
+
+.echo-ext-fill {
+  height: 100%;
+  background: #e84855;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.echo-ext-label {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* ── Ensure .media-icons .menu is flex for button alignment ── */
+.class-row .media-icons .menu {
+  display: flex !important;
+  align-items: center;
+}
+
+/* ── Ensure .content-wrapper is flex so checkbox aligns ────── */
+.class-row .content-wrapper {
+  display: flex !important;
+  align-items: center;
+}

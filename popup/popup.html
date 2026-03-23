@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Echo360 Downloader</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Echo360 Downloader</h1>
+  </header>
+
+  <section id="auth-section">
+    <h2>Sessions</h2>
+    <div id="auth-list">
+      <p class="muted">Checking...</p>
+    </div>
+    <p class="hint">Log in to echo360.org in your browser to authenticate.</p>
+  </section>
+
+  <section id="queue-section">
+    <h2>Downloads</h2>
+    <div id="active-list">
+      <p class="muted" id="empty-msg">No active downloads.</p>
+    </div>
+    <div id="pending-section" style="display:none">
+      <h3>Queued</h3>
+      <ul id="pending-list"></ul>
+    </div>
+  </section>
+
+  <section id="settings-section">
+    <h2>Settings</h2>
+    <label>
+      Parallel downloads:
+      <select id="max-concurrent">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </label>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

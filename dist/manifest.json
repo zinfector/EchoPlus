@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "echoPlus",
+  "version": "2.0.0",
+  "description": "For a more sleek echo experience. Me and the boys hate echo.",
+  "cross_origin_embedder_policy": {
+    "value": "require-corp"
+  },
+  "cross_origin_opener_policy": {
+    "value": "same-origin"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "cookies",
+    "downloads",
+    "storage",
+    "offscreen",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "https://*.echo360.org/*",
+    "https://*.echo360.net/*",
+    "https://content.echo360.org/*",
+    "https://*.amazonaws.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'; media-src 'self' blob: https://*.echo360.org https://*.echo360.net https://*.amazonaws.com; img-src 'self' data: blob: https://*.echo360.org https://*.echo360.net https://thumbnails.echo360.org https://content.echo360.org https://picsum.photos; connect-src 'self' https://echo360.org https://echo360.net https://*.echo360.org https://*.echo360.net https://*.amazonaws.com",
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; child-src 'self' blob:; worker-src 'self' blob:;"
+  },
+  "sandbox": {
+    "pages": ["sandbox.html"]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/ffmpeg/ffmpeg-core.js",
+        "lib/ffmpeg/ffmpeg-core.wasm",
+        "lib/ffmpeg/ffmpeg-core.worker.js",
+        "lib/hls.min.js",
+        "stream/stream.html",
+        "app/index.html",
+        "app/app.js",
+        "app/tailwind.js",
+        "app/tailwind.css",
+        "app/lucide.js",
+        "app/tailwind-config.js",
+        "sandbox.html",
+        "sandbox.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.echo360.org/section/*/home*",
+        "https://*.echo360.net/section/*/home*"
+      ],
+      "js": ["content/class-list-injector.js"],
+      "css": ["content/injector.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}
