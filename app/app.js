@@ -807,9 +807,10 @@ if (initialCache) {
                     
                     <!-- Video Area (Interactive) -->
                     <div class="video-area flex w-full relative bg-gray-900">
-                        
-                        <!-- Feed 1: Screen -->
-                        <div class="feed-1 flex flex-col relative bg-gray-900 border-r border-black z-0 aspect-video" style="width: 50%;">
+
+                        <audio class="hidden feed-audio" playsinline></audio>
+
+                        <!-- Feed 1: Screen -->                        <div class="feed-1 flex flex-col relative bg-gray-900 border-r border-black z-0 aspect-video" style="width: 50%;">
                             <video class="absolute inset-0 w-full h-full object-contain z-10 hidden feed-video-1" playsinline></video>
                             <!-- Centered, shrink-to-fit container mimicking object-fit -->
                             <div class="absolute inset-0 p-3 flex items-center justify-center pointer-events-none">
@@ -1012,6 +1013,15 @@ if (initialCache) {
                     player.querySelector('.feed-1').style.width = '100%';
                     player.querySelector('.feed-1').style.borderRight = 'none';
                 }
+                
+                const vA = player.querySelector('.feed-audio');
+                if (resolved.audioUrl && vA) {
+                    setupVideo(vA, resolved.audioUrl, null);
+                    v1.muted = true; // Mute v1 so we only hear the high-quality audio stream
+                    
+                    vA.addEventListener('play', () => { isPlaying = true; updatePlayUI(); });
+                    vA.addEventListener('pause', () => { isPlaying = false; updatePlayUI(); });
+                }
 
                 // Dynamically spawn N-extra feeds if available
                 for (let i = 2; i < resolved.urls.length; i++) {
@@ -1058,8 +1068,10 @@ if (initialCache) {
 
     function setupVideo(vidElement, url, container) {
         vidElement.classList.remove('hidden');
-        if (container.querySelector('.feed-icon')) container.querySelector('.feed-icon').classList.add('hidden');
-        if (container.querySelector('.feed-label')) container.querySelector('.feed-label').classList.add('hidden');
+        if (container) {
+            if (container.querySelector('.feed-icon')) container.querySelector('.feed-icon').classList.add('hidden');
+            if (container.querySelector('.feed-label')) container.querySelector('.feed-label').classList.add('hidden');
+        }
         
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
             const hls = new Hls({ xhrSetup: function(xhr) { xhr.withCredentials = true; } });
@@ -1099,13 +1111,13 @@ if (initialCache) {
     }
 
     function togglePlay() {
-        const activeVideos = Array.from(player.querySelectorAll('video')).filter(v => v.src || v.srcObject);
-        if (activeVideos.length === 0) return;
+        const activeMedia = Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
+        if (activeMedia.length === 0) return;
         
-        if (activeVideos[0].paused) {
-            activeVideos.forEach(v => v.play().catch(()=>{}));
+        if (activeMedia[0].paused) {
+            activeMedia.forEach(m => m.play().catch(()=>{}));
         } else {
-            activeVideos.forEach(v => v.pause());
+            activeMedia.forEach(m => m.pause());
         }
     }
 
@@ -1118,9 +1130,9 @@ if (initialCache) {
         updatePlayUI(); 
     });
     v1.addEventListener('seeked', () => { 
-        const activeVideos = Array.from(player.querySelectorAll('video')).filter(v => v.src || v.srcObject);
-        activeVideos.forEach(v => {
-            if (v !== v1) v.currentTime = v1.currentTime; 
+        const activeMedia = Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
+        activeMedia.forEach(m => {
+            if (m !== v1) m.currentTime = v1.currentTime; 
         });
     });
 
@@ -1275,7 +1287,13 @@ if (initialCache) {
 
         const setVolumeVisuals = (percentage) => {
             volFill.style.width = `${percentage * 100}%`;
-            v1.volume = percentage;
+            const vA = player.querySelector('.feed-audio');
+            if (vA && (vA.src || vA.srcObject || vA.src !== "")) {
+                vA.volume = percentage;
+                v1.muted = true; // Ensure video feed doesn't echo
+            } else {
+                v1.volume = percentage;
+            }
             if (percentage === 0) {
                 isMuted = true;
                 volIcon.setAttribute('data-lucide', 'volume-x');
@@ -1437,6 +1455,8 @@ if (initialCache) {
         mainSpeedBtnText.innerText = text;
         v1.playbackRate = val;
         v2.playbackRate = val;
+        const vA = player.querySelector('.feed-audio');
+        if (vA) vA.playbackRate = val;
         localStorage.setItem('echo360_speed', val);
         closePopups();
     };
