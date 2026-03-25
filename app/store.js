@@ -1,4 +1,3 @@
-
 export const state = {
     classData: [], currentLayout: 'list', activeGridId: null, activeGridIndex: -1,
     searchQuery: '', sortMode: 'custom', isSelectionMode: false, selectedClasses: new Set(),

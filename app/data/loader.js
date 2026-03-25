@@ -1,8 +1,4 @@
-import { EchoApiClient } from '../../lib/api-client.js';
-import { extractMediaId } from '../../lib/download-queue.js';
-import { state } from '../store.js';
-
-export async function loadData() {
+import { EchoApiClient } from '../../lib/api-client.js';\nimport { extractMediaId } from '../../lib/download-queue.js';\nimport { state } from '../store.js';\n\nexport async function loadData() {
     const client = new EchoApiClient(window.EchoContext.hostname);
     try {
         console.log("[Echo360 Debug] Starting loadData...");
@@ -82,10 +78,10 @@ export async function loadData() {
             return mappedItem;
         });
         console.log("[Echo360 Debug] Mapped window.EchoState.classData. Rendering classes...");
-        window.renderClasses();        console.log("[Echo360 Debug] window.renderClasses() completed successfully.");
+        renderClasses();        console.log("[Echo360 Debug] renderClasses() completed successfully.");
     } catch (e) {
         console.error("[Echo360 Debug] 💥 FATAL ERROR in loadData:", e.stack || e);
-        if (typeof window.showToast === 'function') window.showToast("Error loading syllabus");
+        if (typeof showToast === 'function') showToast("Error loading syllabus");
     }
 }
 export async function loadEnrollments() {
@@ -98,7 +94,7 @@ export async function loadEnrollments() {
             const userSections = data.userSections || [];
 
             // Update the main header with the actual course name
-            const currentCourse = userSections.find(c => c.window.EchoContext.sectionId === window.EchoContext.sectionId);
+            const currentCourse = userSections.find(c => c.sectionId === window.EchoContext.sectionId);
             if (currentCourse) {
                 const fullTitle = `${currentCourse.courseCode || ''} ${currentCourse.courseName || ''}`.trim();
                 if (fullTitle) {
@@ -152,7 +148,7 @@ export async function loadEnrollments() {
                             <ul class="space-y-1 w-full flex flex-col">
                                 ${term.courses.map(course => `
                                     <li class="w-full flex flex-col">
-                                        <a href="${window.EchoContext.hostname}/section/${course.window.EchoContext.sectionId}/home" class="course-link block w-full px-3 py-2 rounded hover:bg-white dark:hover:bg-gray-700 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-600 shadow-sm hover:shadow">
+                                        <a href="${window.EchoContext.hostname}/section/${course.sectionId}/home" class="course-link block w-full px-3 py-2 rounded hover:bg-white dark:hover:bg-gray-700 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-600 shadow-sm hover:shadow">
                                             <div class="font-bold text-xs text-brand-light dark:text-brand-dark mb-0.5 truncate w-full">${course.courseCode}</div>
                                             <div class="text-sm text-gray-700 dark:text-gray-300 truncate w-full" title="${course.courseName}">${course.courseName}</div>
                                         </a>
@@ -174,5 +170,4 @@ export async function loadEnrollments() {
 loadEnrollments();
 loadData();
 
-window.loadData = loadData;
-window.loadEnrollments = loadEnrollments;
+\nwindow.loadData = loadData;\nwindow.loadEnrollments = loadEnrollments;\n

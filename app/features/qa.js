@@ -1,13 +1,11 @@
-import { state } from '../store.js';
-
-export async function window.loadQA() {
-            if (window.EchoState.window.EchoState.qaDataLoaded || window.EchoState.isFetchingQA) return;
+import { state } from '../store.js';\n\nexport async function loadQA() {
+            if (window.EchoState.qaDataLoaded || window.EchoState.isFetchingQA) return;
             window.EchoState.isFetchingQA = true;
             try {
                 const res = await fetch(`https://echo360.org/questions/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ window.EchoContext.sectionId: window.EchoContext.sectionId, isClassroom: false, sortDirection: 'desc', pageNumber: 0, requested: true })
+                    body: JSON.stringify({ sectionId: window.EchoContext.sectionId, isClassroom: false, sortDirection: 'desc', pageNumber: 0, requested: true })
                 });
                 const data = await res.json();
                 if (data.status === 'ok' && data.data) {
@@ -69,7 +67,7 @@ export async function window.loadQA() {
                     });
 
                     await Promise.all(replyPromises);
-                    window.EchoState.window.EchoState.qaDataLoaded = true;
+                    window.EchoState.qaDataLoaded = true;
 
                     // Re-render any currently open dropdowns to show loaded QA
                     document.querySelectorAll('.qa-section-container').forEach(container => {
@@ -81,7 +79,7 @@ export async function window.loadQA() {
                     });
 
                     const qaContainer = document.getElementById('qaListContainer');
-                    if (qaContainer) window.renderQA();
+                    if (qaContainer) renderQA();
                 }
             } catch (e) {
                 console.error("Error loading Q&A:", e);
@@ -146,8 +144,8 @@ export async function window.loadQA() {
                 // If it's a deletion or new reply, we must reload the data entirely
                 if (res.ok && (action === 'delete' || action === 'responses')) {
                     window.EchoState.isFetchingQA = false;
-                    window.EchoState.window.EchoState.qaDataLoaded = false;
-                    await window.loadQA(); 
+                    window.EchoState.qaDataLoaded = false;
+                    await loadQA(); 
                 } else if (!res.ok) {
                     console.error(`QA action ${action} failed with status ${res.status}`);
                 }
@@ -169,7 +167,7 @@ export async function window.loadQA() {
                         removeExistingAttachment: true,
                         body: text,
                         isClassroom: false,
-                        window.EchoContext.sectionId: window.EchoContext.sectionId,
+                        sectionId: window.EchoContext.sectionId,
                         lessonId: lessonId,
                         contentReference: false,
                         anonymous: anonymous
@@ -177,8 +175,8 @@ export async function window.loadQA() {
                 });
                 if (res.ok) {
                     window.EchoState.isFetchingQA = false;
-                    window.EchoState.window.EchoState.qaDataLoaded = false;
-                    await window.loadQA();
+                    window.EchoState.qaDataLoaded = false;
+                    await loadQA();
                 } else {
                     console.error(`Create question failed with status ${res.status}`);
                 }
@@ -192,9 +190,9 @@ export async function window.loadQA() {
             // Target lesson ID might be "05e93c4d-e6..."
             // We use .includes() for robust matching
 
-            if (!window.EchoState.window.EchoState.qaDataLoaded) {
-                // Ensure window.loadQA gets called if it hasn't been yet
-                window.loadQA();
+            if (!window.EchoState.qaDataLoaded) {
+                // Ensure loadQA gets called if it hasn't been yet
+                loadQA();
                 return `<div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm animate-pulse">Loading Q&A...</div>`;
             }
 
@@ -275,7 +273,7 @@ export async function window.loadQA() {
             `;
 
             return `<div class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">${qs}</div>${askBtnHtml}`;
-        }        export function window.renderQA(query = '') {
+        }        export function renderQA(query = '') {
             const qaContainer = document.getElementById('qaListContainer');
             if (!qaContainer) return;
 
@@ -312,8 +310,8 @@ export async function window.loadQA() {
         }
 
         function switchLayout(layout) {
-            if (currentLayout === layout) return;
-            currentLayout = layout;
+            if (window.EchoState.currentLayout === layout) return;
+            window.EchoState.currentLayout = layout;
             
             const btnList = document.getElementById('btn-layout-list');
             const btnGrid = document.getElementById('btn-layout-grid');
@@ -326,14 +324,9 @@ export async function window.loadQA() {
                 btnList.className = 'flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-all focus:outline-none';
             }
 
-            activeGridId = null;
-            activeGridIndex = -1;
+            window.EchoState.activeGridId = null;
+            window.EchoState.activeGridIndex = -1;
             renderClasses();
         }
 
-        
-window.loadQA = loadQA;
-window.interactQA = interactQA;
-window.createQuestion = createQuestion;
-window.generateQAHTML = generateQAHTML;
-window.renderQA = renderQA;
+        \nwindow.loadQA = loadQA;\nwindow.interactQA = interactQA;\nwindow.createQuestion = createQuestion;\nwindow.generateQAHTML = generateQAHTML;\nwindow.renderQA = renderQA;\n

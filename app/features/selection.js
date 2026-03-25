@@ -1,6 +1,4 @@
-import { state } from '../store.js';
-
-export function toggleSelectionMode() {
+import { state } from '../store.js';\n\nexport function toggleSelectionMode() {
             window.EchoState.isSelectionMode = !window.EchoState.isSelectionMode;
             const container = document.getElementById('classList');
             const controls = document.getElementById('selectionControls');
@@ -90,8 +88,4 @@ export function toggleSelectionMode() {
             }
         }
 
-        
-window.toggleSelectionMode = toggleSelectionMode;
-window.toggleSelection = toggleSelection;
-window.toggleSelectAll = toggleSelectAll;
-window.updateSelectionUI = updateSelectionUI;
+        \nwindow.toggleSelectionMode = toggleSelectionMode;\nwindow.toggleSelection = toggleSelection;\nwindow.toggleSelectAll = toggleSelectAll;\nwindow.updateSelectionUI = updateSelectionUI;\n

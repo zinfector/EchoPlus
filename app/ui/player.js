@@ -1,6 +1,4 @@
-import { resolveVideoUrl } from '../../lib/video-resolver.js';
-
-export function getPlayerHTML(cls) {
+import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport function getPlayerHTML(cls) {
             const clsId = cls.id;
             return `
                 <div data-lesson-id="${clsId}" class="echo-player w-full bg-black rounded-lg shadow-2xl flex flex-col relative group/player overflow-hidden border border-gray-800 font-sans select-none pb-16">
@@ -138,7 +136,7 @@ export function getPlayerHTML(cls) {
         player.dataset.initialized = 'true';
 
         const lessonId = player.dataset.lessonId;
-        const cls = classData.find(c => c.id === lessonId);
+        const cls = window.EchoState.classData.find(c => c.id === lessonId);
 
         const v1 = player.querySelector('.feed-video-1');
         const v2 = player.querySelector('.feed-video-2');
@@ -693,7 +691,7 @@ export function getPlayerHTML(cls) {
                 }
             } catch (err) {
                 console.error("Failed to open PIP:", err);
-                if (typeof window.showToast === 'function') window.showToast("Failed to open Pop Out player");
+                if (typeof showToast === 'function') showToast("Failed to open Pop Out player");
             }
         });
     }
@@ -871,6 +869,4 @@ export function getPlayerHTML(cls) {
 };
 ;
 
-        
-window.getPlayerHTML = getPlayerHTML;
-window.initEchoPlayer = initEchoPlayer;
+        \nwindow.getPlayerHTML = getPlayerHTML;\nwindow.initEchoPlayer = initEchoPlayer;\n

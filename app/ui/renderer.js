@@ -1,6 +1,4 @@
-import { state } from '../store.js';
-
-export function getGridDropdownHTML(cls, clsId, clickedIndex) {
+import { state } from '../store.js';\n\nexport function getGridDropdownHTML(cls, clsId, clickedIndex) {
             try {
                 return `
                     <div class="flex items-center justify-between mb-6 border-b border-gray-200 dark:border-gray-800 pb-4">
@@ -10,7 +8,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                         </div>
                         <button data-action="toggleDropdownGrid" data-id="${clsId}" data-index="${clickedIndex}" class="text-gray-400 hover:text-brand-light transition-colors focus:outline-none"><i data-lucide="x" class="w-6 h-6"></i></button>
                     </div>
-                    ${cls.hasVideo ? window.getPlayerHTML(cls) : `<div class="text-center text-sm text-gray-500 py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">No video recording available for this session.</div>`}
+                    ${cls.hasVideo ? getPlayerHTML(cls) : `<div class="text-center text-sm text-gray-500 py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">No video recording available for this session.</div>`}
                     
                     <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
                         <div class="flex items-center space-x-2 mb-4">
@@ -18,7 +16,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                             <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Class Q&A</h3>
                         </div>
                         <div class="qa-section-container" data-lesson-id="${cls.lessonData?.lesson?.lesson?.id || clsId}">
-                            ${window.generateQAHTML(cls.lessonData?.lesson?.lesson?.id || clsId)}
+                            ${generateQAHTML(cls.lessonData?.lesson?.lesson?.id || clsId)}
                         </div>
                     </div>
                 `;
@@ -28,7 +26,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
             }
         }
 
-        export function renderClasses {
+        export function renderClasses() {
             const container = document.getElementById('classList');
             container.innerHTML = '';
 
@@ -122,7 +120,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                             <div class="dropdown-inner theme-transition bg-gray-50 dark:bg-gray-800/30">  
                                 <div class="list-dropdown-wrap border-t border-transparent transition-colors duration-300">
                                     <div class="py-6 w-full">
-                                        ${cls.hasVideo ? window.getPlayerHTML(cls) : `<div class="text-center text-sm text-gray-500 py-8">No video recording available for this class.</div>`}
+                                        ${cls.hasVideo ? getPlayerHTML(cls) : `<div class="text-center text-sm text-gray-500 py-8">No video recording available for this class.</div>`}
                                         
                                         <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
                                             <div class="flex items-center space-x-2 mb-4">
@@ -130,7 +128,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Class Q&A</h3>
                                             </div>
                                             <div class="qa-section-container" data-lesson-id="${cls.lessonData?.lesson?.lesson?.id || cls.id}">
-                                                ${window.generateQAHTML(cls.lessonData?.lesson?.lesson?.id || cls.id)}
+                                                ${generateQAHTML(cls.lessonData?.lesson?.lesson?.id || cls.id)}
                                             </div>
                                         </div>
                                     </div>
@@ -240,7 +238,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                     dropdown.querySelector('.list-dropdown-wrap').classList.add('dark:border-gray-700');
                     
                     const playerEl = dropdown.querySelector('.echo-player');
-                    if (playerEl) window.window.initEchoPlayer(playerEl);
+                    if (playerEl) window.initEchoPlayer(playerEl);
                 } else {
                     dropdown.classList.remove('open');
                     icon.classList.remove('rotate-180', 'opacity-100');
@@ -288,7 +286,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                     lucide.createIcons();
                     
                     // Initialize the new player
-                    window.window.initEchoPlayer(newPane.querySelector('.echo-player'));
+                    window.initEchoPlayer(newPane.querySelector('.echo-player'));
                     
                     document.querySelectorAll('.grid-icon').forEach(el => el.classList.remove('rotate-180', 'text-brand-light', 'dark:text-brand-dark'));
                     document.querySelectorAll('.grid-card').forEach(el => el.classList.remove('ring-2', 'ring-brand-light', 'dark:ring-brand-dark', 'border-transparent'));
@@ -334,7 +332,7 @@ export function getGridDropdownHTML(cls, clsId, clickedIndex) {
                     lucide.createIcons();
                     
                     // Initialize newly injected grid player
-                    window.window.initEchoPlayer(globalDropdown.querySelector('.echo-player'));
+                    window.initEchoPlayer(globalDropdown.querySelector('.echo-player'));
                     
                     void globalDropdown.offsetWidth;
                     
@@ -379,7 +377,4 @@ window.addEventListener('unhandledrejection', function(event) {
     console.error("[Echo360 PROMISE REJECTION]", event.reason?.stack || event.reason);
 });
 
-
-window.getGridDropdownHTML = getGridDropdownHTML;
-window.renderClasses = renderClasses;
-window.toggleDropdown = toggleDropdown;
+\nwindow.getGridDropdownHTML = getGridDropdownHTML;\nwindow.renderClasses = renderClasses;\nwindow.toggleDropdown = toggleDropdown;\n

@@ -14,5 +14,4 @@ export function showToast(message) {
             }, 3000);
         }
 
-        
-window.showToast = showToast;
+        \nwindow.showToast = showToast;\n
