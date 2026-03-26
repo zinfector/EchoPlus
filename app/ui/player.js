@@ -272,11 +272,16 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
             if (container.querySelector('.feed-icon')) container.querySelector('.feed-icon').classList.add('hidden');
             if (container.querySelector('.feed-label')) container.querySelector('.feed-label').classList.add('hidden');
         }
-        
+
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
             const hls = new Hls({ xhrSetup: function(xhr) { xhr.withCredentials = true; } });
             hls.loadSource(url);
             hls.attachMedia(vidElement);
+            hls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
+                if (data.details && data.details.totalduration) {
+                    vidElement.dataset.trueDuration = data.details.totalduration;
+                }
+            });
             return hls;
         } else if (vidElement.canPlayType('application/vnd.apple.mpegurl')) {
             vidElement.src = url;
@@ -284,25 +289,33 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
         return null;
     }
 
-
     const getActiveMedia = () => Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
     const getMaxDuration = () => {
         let max = 0;
-        getActiveMedia().forEach(m => { if (m.duration && isFinite(m.duration) && m.duration > max) max = m.duration; });
+        getActiveMedia().forEach(m => { 
+            let d = parseFloat(m.dataset.trueDuration) || m.duration || 0;
+            if (d && isFinite(d) && d > max) max = d; 
+        });
         return max;
     };
     const getCurrentTime = () => {
         const active = getActiveMedia();
         let max = 0;
         // Get max time of currently playing media
-        active.forEach(m => { if (!m.paused && !m.ended && m.currentTime > max) max = m.currentTime; });
+        active.forEach(m => { 
+            let d = parseFloat(m.dataset.trueDuration) || m.duration || 0;
+            if (!m.paused && !m.ended && m.currentTime < d - 0.5 && m.currentTime > max) max = m.currentTime; 
+        });  
         // Fallback to max time overall if all paused
         if (max === 0) active.forEach(m => { if (m.currentTime > max) max = m.currentTime; });
         return max;
     };
     const seekAllTo = (time) => {
         getActiveMedia().forEach(m => {
-            if (m.duration && isFinite(m.duration)) {
+            let trueDur = parseFloat(m.dataset.trueDuration) || m.duration;
+            if (trueDur && isFinite(trueDur)) {
+                // If seeking beyond this element's internal duration, clamp it to its end.
+                // This correctly "freezes" it on its last frame while others continue.
                 m.currentTime = Math.min(time, m.duration);
             } else {
                 m.currentTime = time;
@@ -311,14 +324,14 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     };
 
     let isPlaying = false;
-    
+
     function updatePlayUI() {
         const playIconSvg = '<svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M8 5v14l11-7z"/></svg>';
         const pauseIconSvg = '<svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
         const playIconBig = '<svg viewBox="0 0 24 24" class="w-8 h-8 fill-current ml-1"><path d="M8 5v14l11-7z"/></svg>';
         const pauseIconBig = '<svg viewBox="0 0 24 24" class="w-8 h-8 fill-current ml-1"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-        
-        isPlaying = getActiveMedia().some(m => !m.paused && !m.ended);
+
+        isPlaying = getActiveMedia().some(m => !m.paused && !m.ended && m.currentTime < (parseFloat(m.dataset.trueDuration) || m.duration || Infinity) - 0.5);
 
         player.querySelectorAll('.play-toggle').forEach(btn => {
             const isBig = btn.classList.contains('w-16');
@@ -328,7 +341,7 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
                 btn.innerHTML = isPlaying ? pauseIconSvg : playIconSvg;
             }
         });
-        
+
         if (isPlaying) {
             bigOverlay.classList.add('opacity-0');
             bigOverlay.classList.remove('pointer-events-auto');
@@ -341,8 +354,8 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     function togglePlay() {
         const active = getActiveMedia();
         if (active.length === 0) return;
-        
-        const anyPlaying = active.some(m => !m.paused && !m.ended);
+
+        const anyPlaying = active.some(m => !m.paused && !m.ended && m.currentTime < (parseFloat(m.dataset.trueDuration) || m.duration || Infinity) - 0.5);
         if (anyPlaying) {
             active.forEach(m => m.pause());
         } else {
@@ -350,8 +363,8 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
                 seekAllTo(0);
             }
             active.forEach(m => {
-                // don't try to play if it's already ended
-                if (m.currentTime < (m.duration || Infinity)) {
+                // don't try to play if it's already ended, to prevent rewinding to 0
+                if (m.currentTime < (m.duration || Infinity) - 0.5) {
                     m.play().catch(()=>{});
                 }
             });
