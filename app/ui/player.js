@@ -202,8 +202,10 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
 
             if (resolved && resolved.urls) {
                 setupVideo(v1, resolved.urls[0], player.querySelector('.feed-1'));
+                attachMediaEvents(v1);
                 if (resolved.urls.length > 1) {
                     setupVideo(v2, resolved.urls[1], player.querySelector('.feed-2'));
+                    attachMediaEvents(v2);
                     v2.muted = true;
                 } else {
                     player.querySelector('.feed-2').style.display = 'none';
@@ -217,7 +219,7 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
                     setupVideo(vA, resolved.audioUrl, null);
                     v1.muted = true; // Mute v1 so we only hear the high-quality audio stream
                     
-                    vA.addEventListener('play', () => { isPlaying = true; updatePlayUI(); });
+                    attachMediaEvents(vA);
                     vA.addEventListener('pause', () => { isPlaying = false; updatePlayUI(); });
                 }
 
@@ -282,6 +284,32 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
         return null;
     }
 
+
+    const getActiveMedia = () => Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
+    const getMaxDuration = () => {
+        let max = 0;
+        getActiveMedia().forEach(m => { if (m.duration && isFinite(m.duration) && m.duration > max) max = m.duration; });
+        return max;
+    };
+    const getCurrentTime = () => {
+        const active = getActiveMedia();
+        let max = 0;
+        // Get max time of currently playing media
+        active.forEach(m => { if (!m.paused && !m.ended && m.currentTime > max) max = m.currentTime; });
+        // Fallback to max time overall if all paused
+        if (max === 0) active.forEach(m => { if (m.currentTime > max) max = m.currentTime; });
+        return max;
+    };
+    const seekAllTo = (time) => {
+        getActiveMedia().forEach(m => {
+            if (m.duration && isFinite(m.duration)) {
+                m.currentTime = Math.min(time, m.duration);
+            } else {
+                m.currentTime = time;
+            }
+        });
+    };
+
     let isPlaying = false;
     
     function updatePlayUI() {
@@ -290,6 +318,8 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
         const playIconBig = '<svg viewBox="0 0 24 24" class="w-8 h-8 fill-current ml-1"><path d="M8 5v14l11-7z"/></svg>';
         const pauseIconBig = '<svg viewBox="0 0 24 24" class="w-8 h-8 fill-current ml-1"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
         
+        isPlaying = getActiveMedia().some(m => !m.paused && !m.ended);
+
         player.querySelectorAll('.play-toggle').forEach(btn => {
             const isBig = btn.classList.contains('w-16');
             if (isBig) {
@@ -309,35 +339,37 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     }
 
     function togglePlay() {
-        const activeMedia = Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
-        if (activeMedia.length === 0) return;
+        const active = getActiveMedia();
+        if (active.length === 0) return;
         
-        if (activeMedia[0].paused) {
-            activeMedia.forEach(m => m.play().catch(()=>{}));
+        const anyPlaying = active.some(m => !m.paused && !m.ended);
+        if (anyPlaying) {
+            active.forEach(m => m.pause());
         } else {
-            activeMedia.forEach(m => m.pause());
+            if (getCurrentTime() >= getMaxDuration() - 0.5) {
+                seekAllTo(0);
+            }
+            active.forEach(m => {
+                // don't try to play if it's already ended
+                if (m.currentTime < (m.duration || Infinity)) {
+                    m.play().catch(()=>{});
+                }
+            });
         }
     }
 
-    v1.addEventListener('play', () => { 
-        isPlaying = true; 
-        updatePlayUI(); 
-    });
-    v1.addEventListener('pause', () => { 
-        isPlaying = false; 
-        updatePlayUI(); 
-    });
-    v1.addEventListener('seeked', () => { 
-        const activeMedia = Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
-        activeMedia.forEach(m => {
-            if (m !== v1) m.currentTime = v1.currentTime; 
-        });
+    const attachMediaEvents = (m) => {
+        m.addEventListener('play', updatePlayUI);
+        m.addEventListener('pause', updatePlayUI);
+        m.addEventListener('ended', updatePlayUI);
+    };
+
     });
 
     // Keyboard Shortcuts
     player.tabIndex = 0; // Make player focusable
     player.addEventListener('keydown', (e) => {
-        if (!v1.duration) return;
+        if (!getMaxDuration()) return;
         switch(e.key.toLowerCase()) {
             case ' ':
             case 'k':
@@ -358,11 +390,11 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
                 break;
             case 'arrowright':
                 e.preventDefault();
-                v1.currentTime = Math.min(v1.currentTime + 10, v1.duration);
+                seekAllTo(getCurrentTime() + 10);
                 break;
             case 'arrowleft':
                 e.preventDefault();
-                v1.currentTime = Math.max(v1.currentTime - 10, 0);
+                seekAllTo(Math.max(0, getCurrentTime() - 10));
                 break;
             case 'arrowup':
                 e.preventDefault();
@@ -418,11 +450,11 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     }
 
     const updateCaptions = () => {
-        if (!ccEnabled || !transcriptData || !v1.duration) {
+        if (!ccEnabled || !transcriptData || !getMaxDuration()) {
             captionsText.innerText = '';
             return;
         }
-        const currentMs = v1.currentTime * 1000;
+        const currentMs = getCurrentTime() * 1000;
         const activeCue = transcriptData.find(cue => currentMs >= cue.startMs && currentMs <= cue.endMs);
         if (activeCue) {
             captionsText.innerText = activeCue.content;
@@ -550,37 +582,53 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
             return `${m}:${s.toString().padStart(2, '0')}`;
         };
 
-        v1.addEventListener('loadedmetadata', () => {
-            if (!initialSeekDone && cls.progress > 0) {
-                const targetTime = (cls.progress / 100) * v1.duration;
-                v1.currentTime = targetTime;
-                if (v2) v2.currentTime = targetTime;
-                initialSeekDone = true;
-            }
-            timeSpan.innerText = `${formatTime(v1.currentTime)} / ${formatTime(v1.duration)}`;
-        });
-
-        v1.addEventListener('timeupdate', () => {
-            if (!isDraggingProg && v1.duration) {
-                const pct = (v1.currentTime / v1.duration) * 100;
-                if(progFill) progFill.style.width = `${pct}%`;
-                timeSpan.innerText = `${formatTime(v1.currentTime)} / ${formatTime(v1.duration)}`;        
-                if (cls.mediaId) localStorage.setItem(`echo360_progress_${cls.mediaId}`, pct);
+        
+        const timeUpdateHandler = () => {
+            if (!isDraggingProg && getMaxDuration()) {
+                const dur = getMaxDuration();
+                const cur = getCurrentTime();
+                const pct = (cur / dur) * 100;
+                if(progFill) progFill.style.width = \`${pct}%\`;
+                timeSpan.innerText = \`${formatTime(cur)} / ${formatTime(dur)}\`;        
+                if (cls.mediaId) localStorage.setItem(\`echo360_progress_${cls.mediaId}\`, pct);
             }
             if (ccEnabled && transcriptData) {
                 updateCaptions();
             }
-        });
+        };
+
+        const attachTimeEvents = (m) => {
+            m.addEventListener('loadedmetadata', () => {
+                if (!initialSeekDone && cls.progress > 0) {
+                    const targetTime = (cls.progress / 100) * getMaxDuration();
+                    seekAllTo(targetTime);
+                    initialSeekDone = true;
+                }
+                timeSpan.innerText = \`${formatTime(getCurrentTime())} / ${formatTime(getMaxDuration())}\`;
+            });
+            m.addEventListener('timeupdate', timeUpdateHandler);
+        };
+        
+        // Use a setInterval to ensure we catch everything if timeupdate misbehaves on ended videos
+        setInterval(() => {
+            if (isPlaying) timeUpdateHandler();
+        }, 250);
+
+        [v1, v2].forEach(v => { if(v) attachTimeEvents(v); });
+
+        
         const updateProgFromMouse = (e) => {
             const rect = progBar.getBoundingClientRect();
             let pct = (e.clientX - rect.left) / rect.width;
             pct = Math.max(0, Math.min(1, pct));
-            if(progFill) progFill.style.width = `${pct * 100}%`;
-            if (v1.duration) {
-                v1.currentTime = pct * v1.duration;
-                timeSpan.innerText = `${formatTime(v1.currentTime)} / ${formatTime(v1.duration)}`;
+            if(progFill) progFill.style.width = \`${pct * 100}%\`;
+            const dur = getMaxDuration();
+            if (dur) {
+                seekAllTo(pct * dur);
+                timeSpan.innerText = \`${formatTime(pct * dur)} / ${formatTime(dur)}\`;
             }
         };
+
 
         progBar.addEventListener('mousedown', (e) => {
             isDraggingProg = true;
@@ -595,12 +643,12 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
             progBar.addEventListener('mouseleave', () => { isHovering = false; hoverContainer.classList.add('hidden'); hoverContainer.classList.remove('flex'); });
             
             progBar.addEventListener('mousemove', (e) => {
-                if (!v1.duration) return;
+                if (!getMaxDuration()) return;
                 const rect = progBar.getBoundingClientRect();
                 let pct = (e.clientX - rect.left) / rect.width;
                 pct = Math.max(0, Math.min(1, pct));
                 
-                let hoverSeconds = Math.floor(pct * v1.duration);
+                let hoverSeconds = Math.floor(pct * getMaxDuration());
                 // Snap to nearest 60 for Echo360 thumbnails API (0, 60, 120, etc.)
                 const snappedSeconds = Math.max(0, Math.floor(hoverSeconds / 60) * 60);
                 
@@ -626,7 +674,7 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     if (skipBackBtn) {
         skipBackBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (v1.duration) v1.currentTime = Math.max(0, v1.currentTime - 10);
+            if (getMaxDuration()) seekAllTo(Math.max(0, getCurrentTime() - 10));
         });
     }
 
@@ -634,7 +682,7 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     if (skipForwardBtn) {
         skipForwardBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (v1.duration) v1.currentTime = Math.min(v1.duration, v1.currentTime + 10);
+            if (getMaxDuration()) seekAllTo(getCurrentTime() + 10);
         });
     }
 
