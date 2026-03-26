@@ -1,4 +1,6 @@
-import { state } from '../store.js';\n\nexport function handleSearch(query) {
+import { state } from '../store.js';
+
+		export function handleSearch(query) {
             window.EchoState.searchQuery = query.toLowerCase();
             if (window.EchoState.activeGridId !== null) {
                 const globalDropdown = document.getElementById('global-grid-dropdown');
@@ -15,7 +17,7 @@ import { state } from '../store.js';\n\nexport function handleSearch(query) {
         }
 
         // --- Transcript Search Logic ---
-        let window.EchoState.searchData = [];
+        window.EchoState.searchData = [];
         
         export async function executeSearch(query) {
             const stats = document.getElementById('searchStats');
@@ -2156,7 +2158,7 @@ document.addEventListener('DOMContentLoaded', () => renderClasses());
         }
 
         // --- Transcript Search Logic ---
-        let window.EchoState.searchData = [];
+        window.EchoState.searchData = [];
         
         export async function executeSearch(query) {
             const stats = document.getElementById('searchStats');
@@ -4456,4 +4458,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleSelection(id);
         }
     });
-});\nwindow.handleSearch = handleSearch;\nwindow.executeSearch = executeSearch;\n
+});
+window.handleSearch = handleSearch;
+window.executeSearch = executeSearch;
