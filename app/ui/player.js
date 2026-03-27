@@ -277,6 +277,11 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
             const hls = new Hls({ xhrSetup: function(xhr) { xhr.withCredentials = true; } });
             hls.loadSource(url);
             hls.attachMedia(vidElement);
+            hls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
+                if (data.details && data.details.totalduration) {
+                    vidElement.dataset.trueDuration = data.details.totalduration;
+                }
+            });
             return hls;
         } else if (vidElement.canPlayType('application/vnd.apple.mpegurl')) {
             vidElement.src = url;
@@ -285,11 +290,12 @@ import { resolveVideoUrl } from '../../lib/video-resolver.js';\n\nexport functio
     }
 
     const getActiveMedia = () => Array.from(player.querySelectorAll('video, audio')).filter(m => m.src || m.srcObject || m.src !== "");
-    
+
     const getMediaDuration = (m) => {
+        let hlsDur = parseFloat(m.dataset.trueDuration);
+        if (hlsDur > 0) return hlsDur;
         return (m.duration && isFinite(m.duration)) ? m.duration : 0;
     };
-
     const getMaxDuration = () => {
         let max = 0;
         getActiveMedia().forEach(m => { 
